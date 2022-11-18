@@ -24,40 +24,45 @@ def get_historical_data():
         hist_df = pd.concat([hist_df, pd.DataFrame(get_dataframe(url, starttime, endtime))])
     # drop everything but opening prices
     hist_np = hist_df.iloc[:, 1].to_numpy().astype(float)
+    """
     plt.plot(range(len(hist_np)), hist_np)
     plt.title('original data')
     plt.show()
+    """
     # standardize data
     #hist_np = (hist_np - np.mean(hist_np)) / np.std(hist_np)
+
+    """
     plt.plot(range(len(hist_np)), hist_np)
     plt.title('standardized data')
     plt.show()
-
+    """
     return hist_np
 
 
 def get_best_fitting_model(hist_np):
+    hist_df = pd.DataFrame(hist_np, columns=['open_price'])
+    hist_df['series'] = range(len(hist_np))
+    split = int(len(hist_df) * 0.85)
+    train = hist_df[:split]
+    test = hist_df[split:]
 
-
-    train, test = np.split(hist_np, [int(0.67 * len(hist_np))])
-
-    plt.plot(range(len(train)), train)
+    """
+    print(train.head())
+    plt.plot(range(len(train['open_price'])), train['open_price'])
     plt.title('train set')
     plt.show()
-    plt.plot(range(len(test)), test)
+    plt.plot(range(len(test['open_price'])), test['open_price'])
     plt.title('test set')
     plt.show()
+    """
+    s = setup(data=train, test_data=test, target='open_price', fold_strategy='timeseries', numeric_features=['series'],
+              fold=9, transform_target=True, session_id=123)
+    best = compare_models(sort='MAE')
 
-
-    #columns = ['Series', 'Open_price']
-    columns = ['Open_price']
-
-    train, test = pd.DataFrame(train, columns=columns), pd.DataFrame(test, columns=columns)
-    s = setup(data=train, test_data=test, target='Open_price', fold_strategy='timeseries', #numeric_features=['Series'],
-              fold=3, transform_target=True, session_id=123)
-    best = compare_models(sort='MSE')
+    print(best)
     #prediction_holdout = predict_model(best)
-    predictions = predict_model(best, data=pd.DataFrame(hist_np, columns=columns))#.iloc[:, 1]
+    predictions = predict_model(best, hist_df)
     plt.plot(range(len(predictions)), predictions)
     plt.show()
 
@@ -80,7 +85,6 @@ def ARIMA_test(hist_np):
     
     #train, test = np.split(hist_np, [int(0.85 * len(hist_np))])
     #train_df, test_df = pd.DataFrame(train), pd.DataFrame(test)
-    """
     model = ARIMA(train, order=(1, 1, 2))
     model_fit = model.fit(disp=0)
     model_fit.plot_predict(dynamic=False)
@@ -98,7 +102,6 @@ def ARIMA_test(hist_np):
     plt.legend()
     plt.title('prediction data')
     plt.show()
-    """
 
     model = ARIMA(train['open_prices'], order=(3, 2, 3))
     fitted = model.fit()
@@ -128,8 +131,8 @@ def ARIMA_test(hist_np):
 
 def main():
     hist_np = get_historical_data()
-    ARIMA_test(hist_np)
-    #get_best_fitting_model(hist_np)
+    #ARIMA_test(hist_np)
+    get_best_fitting_model(hist_np)
 
 
 
