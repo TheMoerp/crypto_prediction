@@ -14,19 +14,16 @@ def get_dataframe(url, starttime, endtime, symbol='BTCUSDT', interval='1h', limi
 
 def get_historical_data():
     url = "https://api.binance.com/api/v3/klines"
-    df = pd.DataFrame()
+    hist_df = pd.DataFrame()
     for i in range(12, -1, -1):
         starttime = str(int((dt.datetime.today() - relativedelta(months=i+1)).timestamp() * 1000))
         endtime = str(int((dt.datetime.today() - relativedelta(months=i)).timestamp() * 1000))
-        pd.concat((get_dataframe(url, starttime, endtime))
+        hist_df = pd.concat([hist_df, pd.DataFrame(get_dataframe(url, starttime, endtime))])
 
-    #starttime = str(int((dt.datetime.today() - relativedelta(months=1)).timestamp() * 1000))
-    #endtime = str(int((dt.datetime.today() - relativedelta(months=0)).timestamp() * 1000))
-    #df = get_dataframe(url, starttime, endtime)
-    df.head()
-    #np_arr = df.iloc[:, 1].to_numpy().astype(np.float)
-    #np_arr = (np_arr - np.mean(np_arr)) / np.std(np_arr)
-    #print(np_arr)
+    hist_np = hist_df.iloc[:, 1].to_numpy().astype(float)
+    #hist_np = (hist_np - np.mean(hist_np)) / np.std(hist_np)
+    plt.plot(range(len(hist_np)), hist_np)
+    plt.show()
 
 
 if __name__ == '__main__':
